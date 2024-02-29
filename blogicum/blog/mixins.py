@@ -12,7 +12,7 @@ class CommentUpdateDeleteMixin(LoginRequiredMixin):
     template_name = 'blog/comment.html'
 
     def dispatch(self, request, *args, **kwargs):
-        instance = get_object_or_404(Comment, pk=kwargs[self.pk_url_kwarg])
+        instance = get_object_or_404(self.model, pk=kwargs[self.pk_url_kwarg])
         if instance.author != request.user:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
@@ -20,7 +20,7 @@ class CommentUpdateDeleteMixin(LoginRequiredMixin):
     def get_success_url(self):
         return reverse(
             'blog:post_detail',
-            kwargs={'post_id': self.kwargs.get('post_id')}
+            args=(self.kwargs['post_id'],)
         )
 
 
@@ -31,7 +31,7 @@ class PostUpdateDeleteMixin(LoginRequiredMixin):
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        instance = get_object_or_404(Post, pk=kwargs[self.pk_url_kwarg])
+        instance = get_object_or_404(self.model, pk=kwargs[self.pk_url_kwarg])
         if instance.author != request.user:
             return redirect('blog:post_detail', kwargs[self.pk_url_kwarg])
         return super().dispatch(request, *args, **kwargs)
