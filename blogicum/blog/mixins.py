@@ -1,9 +1,10 @@
-from blog.forms import PostForm
-from blog.models import Comment, Post
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+
+from blog.forms import PostForm
+from blog.models import Comment, Post
 
 
 class CommentUpdateDeleteMixin(LoginRequiredMixin):

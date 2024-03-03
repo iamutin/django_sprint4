@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -9,7 +8,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView,
 from blog.forms import CommentForm, PostForm
 from blog.mixins import CommentUpdateDeleteMixin, PostUpdateDeleteMixin
 from blog.models import Category, Post, User
-from blog.utils import published_posts
+from blog.services import annotate_comment_count, get_published_posts
 
 POSTS_PER_PAGE = 10
 
@@ -19,7 +18,11 @@ class PostListView(ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        return published_posts()
+        posts = get_published_posts()
+        return (
+            annotate_comment_count(posts)
+            .select_related('author', 'category', 'location')
+        )
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -85,11 +88,17 @@ class ProfileView(ListView):
         username = self.kwargs.get('username')
         if self.request.user.username == username:
             return (
-                Post.objects.filter(author__username=username)
-                .annotate(comment_count=Count('comments'))
+                annotate_comment_count()
+                .filter(author__username=username)
+                .select_related('author', 'category', 'location')
                 .order_by('-pub_date')
             )
-        return published_posts().filter(author__username=username)
+
+        posts = get_published_posts().filter(author__username=username)
+        return (
+            annotate_comment_count(posts)
+            .select_related('author', 'category', 'location')
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,8 +151,12 @@ class CategoryListView(ListView):
     template_name = 'blog/category.html'
 
     def get_queryset(self):
-        return published_posts().filter(
+        posts = get_published_posts().filter(
             category__slug=self.kwargs['category_slug']
+        )
+        return (
+            annotate_comment_count(posts)
+            .select_related('author', 'category', 'location')
         )
 
     def get_context_data(self, **kwargs):

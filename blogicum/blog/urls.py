@@ -4,7 +4,7 @@ from . import views
 
 app_name = 'blog'
 
-posts = [
+posts_urls = [
     path('create/',
          views.PostCreateView.as_view(), name='create_post'),
     path('<int:post_id>/',
@@ -21,15 +21,15 @@ posts = [
          views.CommentDeleteView.as_view(), name='delete_comment'),
 ]
 
-profile = [
+profile_urls = [
     path('', views.ProfileUpdateView.as_view(), name='edit_profile'),
     path('<slug:username>/', views.ProfileView.as_view(), name='profile'),
 ]
 
 urlpatterns = [
     path('', views.PostListView.as_view(), name='index'),
-    path('posts/', include(posts)),
-    path('profile/', include(profile)),
+    path('posts/', include(posts_urls)),
+    path('profile/', include(profile_urls)),
     path('category/<slug:category_slug>/',
          views.CategoryListView.as_view(), name='category_posts'),
 ]
