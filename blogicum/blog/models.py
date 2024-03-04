@@ -1,24 +1,7 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Count
 
 User = get_user_model()
-
-
-class PublishedManager(models.Manager):
-    def get_queryset(self):
-        return (
-            super().get_queryset().filter(
-                is_published=True,
-                pub_date__lte=datetime.now(),
-                category__is_published=True
-            )
-            .annotate(comment_count=Count('comments'))
-            .select_related('author', 'category', 'location')
-            .order_by('-pub_date')
-        )
 
 
 class PublishedCreated(models.Model):
@@ -70,7 +53,8 @@ class Post(PublishedCreated):
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
         verbose_name='Дата и время публикации',
-        help_text='Если установить дату и время в будущем — можно делать отложенные публикации.'
+        help_text=('Если установить дату и время в будущем — '
+                   'можно делать отложенные публикации.')
     )
     author = models.ForeignKey(
         User,
@@ -96,9 +80,6 @@ class Post(PublishedCreated):
         blank=True
     )
 
-    objects = models.Manager()
-    published = PublishedManager()
-
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
@@ -118,4 +99,4 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ('created_at',)
